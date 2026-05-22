@@ -61,15 +61,14 @@ const preguntas = [
   }
 ];
 
-// Aquí deja tu array de preguntas igual que lo tienes arriba
+
 
 let indice = 0;
-let seleccionada = null;
 let aciertos = 0;
 let fallos = 0;
 let pasadas = 0;
 let respondidas = 0;
-let bloqueado = false;
+let respondidaActual = false;
 
 const rosco = document.getElementById("rosco");
 const preguntaTexto = document.getElementById("pregunta");
@@ -85,55 +84,61 @@ const fallosHTML = document.getElementById("fallos");
 const pasadasHTML = document.getElementById("pasadas");
 
 function crearRosco() {
+
   rosco.innerHTML = "";
 
   preguntas.forEach((p, i) => {
+
     const div = document.createElement("div");
+
     div.classList.add("letra");
+
     div.textContent = p.letra;
+
     div.id = `letra-${i}`;
+
     rosco.appendChild(div);
   });
 }
 
 function mostrarPregunta() {
+
   if (respondidas === preguntas.length) {
     finalizarJuego();
     return;
   }
 
-  seleccionada = null;
-  bloqueado = false;
-  resultado.textContent = "";
+  respondidaActual = false;
+
   estado.textContent = "Elige una respuesta";
 
-  document.querySelectorAll(".letra").forEach(letra => {
-    letra.classList.remove("activa");
-  });
+  document
+    .querySelectorAll(".letra")
+    .forEach(letra => {
+      letra.classList.remove("activa");
+    });
 
-  document.getElementById(`letra-${indice}`).classList.add("activa");
+  document
+    .getElementById(`letra-${indice}`)
+    .classList.add("activa");
 
-  empieza.textContent = `EMPIEZA POR ${preguntas[indice].letra}`;
-  preguntaTexto.textContent = preguntas[indice].pregunta;
+  empieza.textContent =
+    `EMPIEZA POR ${preguntas[indice].letra}`;
+
+  preguntaTexto.textContent =
+    preguntas[indice].pregunta;
 
   opcionesDiv.innerHTML = "";
 
   preguntas[indice].opciones.forEach((opcion, i) => {
+
     const btn = document.createElement("button");
+
     btn.classList.add("opcion");
+
     btn.textContent = opcion;
 
-    btn.onclick = () => {
-      if (bloqueado) return;
-
-      document.querySelectorAll(".opcion").forEach(boton => {
-        boton.classList.remove("seleccionada");
-      });
-
-      btn.classList.add("seleccionada");
-      seleccionada = i;
-      estado.textContent = "Respuesta seleccionada";
-    };
+    btn.onclick = () => comprobarRespuesta(i);
 
     opcionesDiv.appendChild(btn);
   });
@@ -141,75 +146,128 @@ function mostrarPregunta() {
   actualizarProgreso();
 }
 
-function siguientePregunta() {
-  if (bloqueado) return;
+function comprobarRespuesta(opcionElegida) {
 
-  if (seleccionada === null) {
-    alert("Selecciona una respuesta o pulsa Pasapalabra.");
-    return;
-  }
+  if (respondidaActual) return;
 
-  bloqueado = true;
+  respondidaActual = true;
 
-  const letraActual = document.getElementById(`letra-${indice}`);
-  const botones = document.querySelectorAll(".opcion");
   const correcta = preguntas[indice].correcta;
 
+  const botones =
+    document.querySelectorAll(".opcion");
+
+  const letraActual =
+    document.getElementById(`letra-${indice}`);
+
   botones.forEach((boton, i) => {
+
     boton.disabled = true;
 
     if (i === correcta) {
       boton.classList.add("correct-answer");
     }
 
-    if (i === seleccionada && seleccionada !== correcta) {
+    if (
+      i === opcionElegida &&
+      opcionElegida !== correcta
+    ) {
       boton.classList.add("wrong-answer");
     }
   });
 
-  if (seleccionada === correcta) {
+  if (opcionElegida === correcta) {
+
     aciertos++;
+
     letraActual.classList.add("correcta");
-    estado.textContent = "¡Correcto!";
+
+    estado.textContent =
+      "¡Correcto! Pulsa siguiente.";
+
   } else {
+
     fallos++;
+
     letraActual.classList.add("incorrecta");
-    estado.textContent = "Incorrecto. La correcta está marcada en verde.";
+
+    estado.textContent =
+      "Incorrecto. La correcta está en verde.";
   }
 
   respondidas++;
-  actualizarStats();
-  actualizarProgreso();
 
-  setTimeout(() => {
-    avanzar();
-  }, 1800);
+  actualizarStats();
+
+  actualizarProgreso();
+}
+
+function siguientePregunta() {
+
+  if (!respondidaActual) {
+
+    alert(
+      "Primero selecciona una respuesta."
+    );
+
+    return;
+  }
+
+  avanzar();
 }
 
 function pasarPregunta() {
-  if (bloqueado) return;
+
+  if (respondidaActual) {
+
+    alert(
+      "Ya has respondido esta pregunta."
+    );
+
+    return;
+  }
 
   pasadas++;
+
   actualizarStats();
+
   avanzar();
 }
 
 function avanzar() {
+
   if (respondidas === preguntas.length) {
+
     finalizarJuego();
+
     return;
   }
 
   let intentos = 0;
 
   do {
-    indice = (indice + 1) % preguntas.length;
+
+    indice =
+      (indice + 1) % preguntas.length;
+
     intentos++;
+
   } while (
+
     (
-      document.getElementById(`letra-${indice}`).classList.contains("correcta") ||
-      document.getElementById(`letra-${indice}`).classList.contains("incorrecta")
-    ) &&
+      document
+        .getElementById(`letra-${indice}`)
+        .classList.contains("correcta")
+
+      ||
+
+      document
+        .getElementById(`letra-${indice}`)
+        .classList.contains("incorrecta")
+    )
+
+    &&
+
     intentos < preguntas.length
   );
 
@@ -217,33 +275,61 @@ function avanzar() {
 }
 
 function actualizarStats() {
+
   aciertosHTML.textContent = aciertos;
+
   fallosHTML.textContent = fallos;
+
   pasadasHTML.textContent = pasadas;
 }
 
 function actualizarProgreso() {
-  contador.textContent = `Pregunta ${respondidas + 1} de ${preguntas.length}`;
-  const porcentaje = (respondidas / preguntas.length) * 100;
-  progressFill.style.width = `${porcentaje}%`;
+
+  contador.textContent =
+    `Pregunta ${
+      Math.min(
+        respondidas + 1,
+        preguntas.length
+      )
+    } de ${preguntas.length}`;
+
+  const porcentaje =
+    (respondidas / preguntas.length) * 100;
+
+  progressFill.style.width =
+    `${porcentaje}%`;
 }
 
 function finalizarJuego() {
-  preguntaTexto.textContent = "Juego terminado";
-  empieza.textContent = "RESULTADO FINAL";
-  estado.textContent = "Partida finalizada";
+
+  preguntaTexto.textContent =
+    "Juego terminado";
+
+  empieza.textContent =
+    "RESULTADO FINAL";
+
+  estado.textContent =
+    "Partida finalizada";
+
   opcionesDiv.innerHTML = "";
-  contador.textContent = `Completado ${preguntas.length} de ${preguntas.length}`;
+
+  contador.textContent =
+    `Completado ${preguntas.length} de ${preguntas.length}`;
+
   progressFill.style.width = "100%";
 
   resultado.innerHTML = `
     Aciertos: ${aciertos}<br>
     Fallos: ${fallos}<br>
-    Nota final: ${(aciertos / preguntas.length * 10).toFixed(2)}
+    Nota final:
+    ${(aciertos / preguntas.length * 10).toFixed(2)}
   `;
 
-  document.querySelector(".actions").style.display = "none";
+  document
+    .querySelector(".actions")
+    .style.display = "none";
 }
 
 crearRosco();
+
 mostrarPregunta();

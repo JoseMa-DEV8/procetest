@@ -61,12 +61,15 @@ const preguntas = [
   }
 ];
 
+// Aquí deja tu array de preguntas igual que lo tienes arriba
+
 let indice = 0;
 let seleccionada = null;
 let aciertos = 0;
 let fallos = 0;
 let pasadas = 0;
 let respondidas = 0;
+let bloqueado = false;
 
 const rosco = document.getElementById("rosco");
 const preguntaTexto = document.getElementById("pregunta");
@@ -100,6 +103,7 @@ function mostrarPregunta() {
   }
 
   seleccionada = null;
+  bloqueado = false;
   resultado.textContent = "";
   estado.textContent = "Elige una respuesta";
 
@@ -120,6 +124,8 @@ function mostrarPregunta() {
     btn.textContent = opcion;
 
     btn.onclick = () => {
+      if (bloqueado) return;
+
       document.querySelectorAll(".opcion").forEach(boton => {
         boton.classList.remove("seleccionada");
       });
@@ -136,27 +142,53 @@ function mostrarPregunta() {
 }
 
 function siguientePregunta() {
+  if (bloqueado) return;
+
   if (seleccionada === null) {
     alert("Selecciona una respuesta o pulsa Pasapalabra.");
     return;
   }
 
-  const letraActual = document.getElementById(`letra-${indice}`);
+  bloqueado = true;
 
-  if (seleccionada === preguntas[indice].correcta) {
+  const letraActual = document.getElementById(`letra-${indice}`);
+  const botones = document.querySelectorAll(".opcion");
+  const correcta = preguntas[indice].correcta;
+
+  botones.forEach((boton, i) => {
+    boton.disabled = true;
+
+    if (i === correcta) {
+      boton.classList.add("correct-answer");
+    }
+
+    if (i === seleccionada && seleccionada !== correcta) {
+      boton.classList.add("wrong-answer");
+    }
+  });
+
+  if (seleccionada === correcta) {
     aciertos++;
     letraActual.classList.add("correcta");
+    estado.textContent = "¡Correcto!";
   } else {
     fallos++;
     letraActual.classList.add("incorrecta");
+    estado.textContent = "Incorrecto. La correcta está marcada en verde.";
   }
 
   respondidas++;
   actualizarStats();
-  avanzar();
+  actualizarProgreso();
+
+  setTimeout(() => {
+    avanzar();
+  }, 1800);
 }
 
 function pasarPregunta() {
+  if (bloqueado) return;
+
   pasadas++;
   actualizarStats();
   avanzar();
